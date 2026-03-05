@@ -17,9 +17,9 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS — allow deployed frontend + localhost for dev
+// CORS — allow deployed Vercel frontend + localhost for dev
 const allowedOrigins = [
-    'https://brilliant-education-production-a146.up.railway.app',
+    'https://agrierp-main.vercel.app',
     process.env.CLIENT_URL,
     'http://localhost:5173',
     'http://localhost:3000',
@@ -30,6 +30,10 @@ app.use(cors({
         // Allow requests with no origin (mobile apps, Postman, curl, etc.)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        // Also allow Vercel preview deployments
+        if (origin && origin.endsWith('.vercel.app')) {
             return callback(null, true);
         }
         return callback(new Error('Not allowed by CORS'));
