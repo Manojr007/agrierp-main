@@ -9,15 +9,9 @@ const errorHandler = require('./middleware/errorHandler');
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
-
 const app = express();
 
-// Security middleware
-app.use(helmet());
-
-// CORS — allow deployed Vercel frontend + localhost for dev
+// ─── CORS MUST BE FIRST — before helmet and everything else ───────────────────
 const allowedOrigins = [
     'https://agrierp-main.vercel.app',
     process.env.CLIENT_URL,
@@ -25,23 +19,41 @@ const allowedOrigins = [
     'http://localhost:3000',
 ].filter(Boolean);
 
+// Raw header middleware — guarantees CORS headers on every response including errors
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+
+    // Immediately respond to preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+// Security middleware — after CORS headers are set
+app.use(helmet({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: false }));
+
+// cors() package as second layer
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, Postman, curl, etc.)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
             return callback(null, true);
         }
-        // Also allow Vercel preview deployments
-        if (origin && origin.endsWith('.vercel.app')) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
+        return callback(null, true); // allow all for now while debugging
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+app.options('*', cors());
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));
@@ -80,6 +92,8 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🌾 AgriERP Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    // Connect to DB after server starts so CORS is always active
+    connectDB();
 });
 
 module.exports = app;
