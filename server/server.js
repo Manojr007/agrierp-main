@@ -49,6 +49,11 @@ app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'AgriERP API is running', timestamp: new Date() });
 });
 
+// Root route to fix "Cannot GET /"
+app.get('/', (req, res) => {
+    res.send('AgriERP API is running...');
+});
+
 // Error handler
 app.use(errorHandler);
 
