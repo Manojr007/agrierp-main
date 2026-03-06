@@ -1,12 +1,19 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  const uri = process.env.MONGO_URI;
+  let uri = process.env.MONGO_URI;
 
   if (!uri || (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://'))) {
     console.error('❌ MONGO_URI is missing or invalid. Set it to a valid MongoDB connection string.');
     console.error(`   Current value: "${uri || 'NOT SET'}"`);
-    return; // Don't crash — server stays alive for CORS preflight etc.
+    return;
+  }
+
+  // FORCE CORRECT CASING: MongoDB Atlas is case-sensitive. 
+  // If the URI contains 'agrierp' (lowercase), replace it with 'Agrierp' (uppercase)
+  if (uri.includes('.mongodb.net/agrierp')) {
+    uri = uri.replace('.mongodb.net/agrierp', '.mongodb.net/Agrierp');
+    console.log('🔄 Auto-corrected DB name casing to "Agrierp"');
   }
 
   try {
