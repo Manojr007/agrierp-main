@@ -1,0 +1,30 @@
+services:
+  # Backend Service
+  - type: web
+    name: agrierp-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false # User needs to set this in the dashboard or specify here
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://agrierp-frontend.onrender.com
+
+  # Frontend Static Site
+  - type: static
+    name: agrierp-frontend
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    publishPath: client/dist
+    routes:
+      - source: /.*
+        destination: /index.html
+        type: rewrite

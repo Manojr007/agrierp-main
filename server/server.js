@@ -87,9 +87,12 @@ app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'AgriERP API is running', timestamp: new Date() });
 });
 
-// Root route to fix "Cannot GET /"
+// Root route to fix "Cannot GET /" and diagnostic info
 app.get('/', (req, res) => {
-    res.send('AgriERP API is running...');
+    const dbState = require('mongoose').connection.readyState;
+    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+    const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    res.send(`AgriERP API is running... DB Status: ${states[dbState]}`);
 });
 
 // Error handler
