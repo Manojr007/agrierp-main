@@ -160,6 +160,7 @@ exports.getProfitLoss = async (req, res, next) => {
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
         const end = endDate ? new Date(endDate) : new Date();
+        if (endDate) end.setHours(23, 59, 59, 999);
 
         const salesTotal = await Sale.aggregate([
             { $match: { saleDate: { $gte: start, $lte: end } } },
@@ -235,6 +236,7 @@ exports.getSalesReport = async (req, res, next) => {
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         const end = endDate ? new Date(endDate) : new Date();
+        if (endDate) end.setHours(23, 59, 59, 999);
 
         const sales = await Sale.find({ saleDate: { $gte: start, $lte: end } })
             .populate('customer', 'name phone village')
@@ -312,7 +314,10 @@ exports.getLedgerReport = async (req, res, next) => {
 
         if (type) query.type = type;
         if (startDate && endDate) {
-            query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            query.date = { $gte: start, $lte: end };
         }
 
         const entries = await Ledger.find(query).sort({ date: -1 });
