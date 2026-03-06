@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://brilliant-education-production-a146.up.railway.app/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://agrierp-main-1.onrender.com/api',
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true,
 });

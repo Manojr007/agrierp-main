@@ -14,15 +14,24 @@ const app = express();
 // ─── CORS MUST BE FIRST — before helmet and everything else ───────────────────
 const allowedOrigins = [
     'https://agrierp-main.vercel.app',
+    'https://agrierp-frontend.onrender.com',
     process.env.CLIENT_URL,
     'http://localhost:5173',
     'http://localhost:3000',
 ].filter(Boolean);
 
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true;
+    if (allowedOrigins.includes(origin)) return true;
+    if (origin.endsWith('.vercel.app')) return true;
+    if (origin.endsWith('.onrender.com')) return true;
+    return false;
+};
+
 // Raw header middleware — guarantees CORS headers on every response including errors
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (!origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
+    if (isAllowedOrigin(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin || '*');
     }
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -42,11 +51,8 @@ app.use(helmet({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: fals
 // cors() package as second layer
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
-            return callback(null, true);
-        }
-        return callback(null, true); // allow all for now while debugging
+        if (isAllowedOrigin(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
