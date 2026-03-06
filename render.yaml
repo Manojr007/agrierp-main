@@ -25,6 +25,6 @@ services:
     buildCommand: cd client && npm install && npm run build
     publishPath: client/dist
     routes:
-      - source: /.*
+      - source: /*
         destination: /index.html
         type: rewrite
